@@ -26,30 +26,28 @@ const Home = (): JSX.Element => {
   const { addProduct, cart } = useCart();
 
   const cartItemsAmount = cart.reduce((sumAmount, product) => {
-    if (sumAmount[product.id]) {
       return {
         ...sumAmount,
-        [product.id]: sumAmount[product.id] + 1
+        [product.id]: product.amount
       }
-    }
-    return {
-      ...sumAmount,
-      [product.id]: 1
-    }
   }, {} as CartItemsAmount)
 
   useEffect(() => {
     async function loadProducts() {
-      const response = await api.get('products');
-      
-      setProducts(response.data);
+      const response = await api.get<Product[]>('products');
+      const formattedProducts = response.data.map(product =>( {
+          ...product,
+          priceFormatted: formatPrice(product.price)
+      }));
+
+      setProducts(formattedProducts);
     }
 
     loadProducts();
   }, []);
 
   function handleAddProduct(id: number) {
-    addProduct(id)
+    addProduct(id);
   }
   return (
     <ProductList>
@@ -57,7 +55,7 @@ const Home = (): JSX.Element => {
         <li key={product.id}>
           <img src={product.image} alt={product.title} />
           <strong>{product.title}</strong>
-          <span>{formatPrice(product.price)}</span>
+          <span>{product.priceFormatted}</span>
           <button
             type="button"
             data-testid="add-product-button"
